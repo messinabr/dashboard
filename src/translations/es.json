@@ -1,0 +1,83 @@
+{
+  "camera": {
+    "all_cameras": "Todas las Cámaras",
+    "cameras": "Cámaras"
+  },
+  "climate": {
+    "all_climates": "Todos los Termostatos",
+    "climates": "Termostatos"
+  },
+  "cover": {
+    "all_covers": "Todas las Cubiertas",
+    "covers": "Cubiertas"
+  },
+  "fan": {
+    "all_fans": "Todos los Ventiladores",
+    "fans": "Ventiladores"
+  },
+  "generic": {
+    "all": "Todo",
+    "areas": "Áreas",
+    "busy": "Ocupado",
+    "good_afternoon": "Buenas tardes",
+    "good_evening": "Buenas noches",
+    "good_morning": "Buenos días",
+    "hello": "Hola",
+    "home": "Inicio",
+    "miscellaneous": "Varios",
+    "numbers": "Números",
+    "off": "Apagado",
+    "on": "Encendido",
+    "open": "Abierto",
+    "ordering_position": "Posición de orden",
+    "unavailable": "No Disponible",
+    "unclosed": "Sin Cerrar",
+    "undisclosed": "Varios",
+    "unknown": "Desconocido"
+  },
+  "input_select": {
+    "input_selects": "Selecciones de Entrada"
+  },
+  "light": {
+    "all_lights": "Todas las Luces",
+    "lights": "Luces"
+  },
+  "lock": {
+    "all_locks": "Todas las Candados",
+    "locked": "Locked",
+    "locks": "Candados",
+    "unlocked": "Desbloqueado"
+  },
+  "media_player": {
+    "media_players": "Reproductores Multimedia"
+  },
+  "scene": {
+    "scenes": "Scenas"
+  },
+  "select": {
+    "selects": "Seleccionar"
+  },
+  "sensor": {
+    "binary_sensors": "Binario Sensores",
+    "sensors": "Sensores"
+  },
+  "switch": {
+    "all_switches": "Todos los Apagadores",
+    "badge_confirmation": "Advertencia: Esta acción apagará todos los interruptores. ¿Está seguro de que desea continuar?",
+    "switches": "Apagadores"
+  },
+  "vacuum": {
+    "all_vacuums": "Todas las Aspiradoras",
+    "vacuums": "Aspiradoras"
+  },
+  "valve": {
+    "all_valves": "Todas las válvulas",
+    "valves": "Válvulas",
+    "open": "Abierta",
+    "opening": "Abriendo",
+    "closed": "Cerrada",
+    "closing": "Cerrando",
+    "stopped": "Detenida",
+    "unclosed": "No Cerrada"
+  }
+}

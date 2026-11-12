@@ -1,0 +1,61 @@
+{
+  "name": "mushroom-strategy-nv",
+  "version": "3.2.0-nv.1",
+  "description": "Fork of Mushroom Dashboard Strategy with a visual editor, entity names only and custom chips.",
+  "keywords": [
+    "dashboard",
+    "strategy",
+    "mushroom"
+  ],
+  "homepage": "https://github.com/messinabr/dashboard",
+  "bugs": "https://github.com/messinabr/dashboard/issues",
+  "license": "MIT",
+  "author": {
+    "name": "Ferry Cools"
+  },
+  "contributors": [
+    {
+      "name": "Aalian Khan"
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/messinabr/dashboard"
+  },
+  "engines": {
+    "node": ">=20.9.0"
+  },
+  "dependencies": {
+    "deepmerge": "^4"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^25.9.3",
+    "@types/semver": "^7.7.1",
+    "typescript-eslint": "^8.61.1",
+    "bumpp": "^11.1.0",
+    "eslint": "^10.5.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.6",
+    "home-assistant-js-websocket": "^9.6.0",
+    "husky": "^9.1.7",
+    "is-ci": "^4.1.0",
+    "markdownlint-cli2": "^0.22.0",
+    "prettier": "^3.8.4",
+    "semver": "^7.8.4",
+    "superstruct": "^2.0.2",
+    "ts-loader": "^9.6.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^6.0.3",
+    "webpack": "^5.107.2",
+    "webpack-cli": "^7.0.3"
+  },
+  "scripts": {
+    "ts:format": "prettier --write \"**/*.ts\"",
+    "json:format": "prettier --write \"**/*.json\"",
+    "md:lint": "markdownlint-cli2 \"**/*.md\" \"#node_modules\" \"#dist\"  \"#venv\"",
+    "md:lint:fix": "markdownlint-cli2 \"**/*.md\" \"#node_modules\" \"#dist\" \"#venv\" --fix",
+    "build-dev": "webpack --config webpack.dev.config.ts",
+    "build": "webpack"
+  }
+}

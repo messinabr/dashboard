@@ -1,0 +1,33 @@
+{
+  "include": ["src/**/*", "webpack.config.ts", "webpack.dev.config.ts"],
+  "compilerOptions": {
+    // 1. Language and Environment
+    "types": ["node"],
+    "target": "ES2020",
+    // 2. Module System
+    "module": "ES2020",
+    "moduleResolution": "bundler",
+    "outDir": "./dist",
+    "resolveJsonModule": true,
+    // 3. JavaScript and Source Maps
+    "allowJs": true,
+    "sourceMap": true,
+    // 4. Interop and Imports
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    // 5. Type Checking and Strictness
+    "strict": true,
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "noImplicitReturns": true,
+    "strictNullChecks": true,
+    // 6. Project Structure and Build Integrity
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true
+  },
+  "ts-node": {
+    "compilerOptions": {
+      "module": "CommonJS"
+    }
+  }
+}
