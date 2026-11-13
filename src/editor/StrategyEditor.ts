@@ -16,7 +16,7 @@ import type { ChipConfig } from '../utilities/chips';
 
 type Obj = Record<string, any>;
 type L = { pt: string; en: string };
-type Kind = 'bool' | 'number' | 'select' | 'entity';
+type Kind = 'bool' | 'number' | 'select' | 'entity' | 'ratio';
 
 interface Field {
   id: string;
@@ -285,6 +285,17 @@ const SECTIONS: Section[] = [
             { value: 'AreaCard', label: l('Mushroom (ícone e texto)', 'Mushroom (icon and text)') },
             { value: 'HaAreaCard', label: l('Home Assistant (com imagem do cômodo)', 'Home Assistant (with picture)') },
           ],
+        },
+        {
+          id: 'a_ratio',
+          path: ['areas', '_', 'aspect_ratio'],
+          kind: 'ratio',
+          def: '',
+          label: l('Altura da foto do cômodo (%)', 'Area picture height (%)'),
+          helper: l(
+            'Só vale para o estilo "Home Assistant". É a altura da foto em porcentagem da largura: quanto menor, mais fino o card (a foto é cortada em cima e embaixo). Padrão do HA = 56 (proporção 16:9). Ex.: 39 deixa o card bem mais fino. Também aceita proporção, como 16:9. Vazio = padrão.',
+            'Only for the "Home Assistant" style. The picture height as a percentage of its width: the smaller, the thinner the card (the picture is cropped top and bottom). HA default = 56 (16:9). E.g. 39 makes the card much thinner. Also accepts a ratio like 16:9. Empty = default.'
+          ),
         },
       ];
       const areas: Obj = hass?.areas ?? {};
@@ -592,6 +603,43 @@ class MushroomStrategyEditor extends HTMLElement {
 
         input.value = String(n);
         this._commit(field, n);
+      });
+      wrap.appendChild(input);
+
+      return { row: this._row(field, lang, wrap) };
+    }
+
+    if (field.kind === 'ratio') {
+      const wrap = document.createElement('div');
+      const input = document.createElement('input');
+      const shownValue = (v: unknown): string => String(v ?? '').replace(/%$/, '');
+
+      wrap.className = 'nv-ctl';
+      input.className = 'nv-in';
+      input.type = 'text';
+      input.inputMode = 'decimal';
+      input.placeholder = '56';
+      input.value = shownValue(value);
+      input.addEventListener('change', () => {
+        const text = input.value.trim().replace(',', '.');
+
+        if (text === '') {
+          this._commit(field, '');
+
+          return;
+        }
+
+        // Plain number or "N%" = percentage; "A:B" or "AxB" = ratio. Anything else is rejected.
+        const percent = /^(\d+(?:\.\d+)?)\s*%?$/.exec(text);
+        const ratio = /^(\d+(?:\.\d+)?)\s*[:xX]\s*(\d+(?:\.\d+)?)$/.exec(text);
+
+        if (percent && Number(percent[1]) > 0) {
+          this._commit(field, `${percent[1]}%`);
+        } else if (ratio && Number(ratio[1]) > 0 && Number(ratio[2]) > 0) {
+          this._commit(field, `${ratio[1]}:${ratio[2]}`);
+        } else {
+          input.value = shownValue(this._value(field));
+        }
       });
       wrap.appendChild(input);
 
