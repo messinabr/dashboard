@@ -39,6 +39,8 @@ interface Section {
   open?: boolean;
   /** Marks the chips section, which has its own list editor instead of plain fields. */
   chips?: boolean;
+  /** Marks the areas sub-section, which adds the alphabetical/manual order switch and one row per area. */
+  areaOrder?: boolean;
   fields: (hass: any) => Field[];
   /** Sub-categories: collapsible panels shown inside this section, after its own fields. */
   sub?: Section[];
@@ -280,8 +282,9 @@ const SECTIONS: Section[] = [
     sub: [
     {
       title: l('Cômodos', 'Areas'),
+      areaOrder: true,
       intro: l('A lista de cômodos vem do seu Home Assistant. Esconder aqui não apaga o cômodo, só tira do dashboard.', 'The list comes from your Home Assistant. Hiding here does not delete the area.'),
-      fields: (hass) => {
+      fields: () => {
         const fields: Field[] = [
           {
             id: 'a_type',
@@ -328,23 +331,6 @@ const SECTIONS: Section[] = [
             l('Grupo das entidades que não têm cômodo definido no Home Assistant.', 'Group of entities that have no area set in Home Assistant.')
           ),
         ];
-        const areas: Obj = hass?.areas ?? {};
-        const list = Object.keys(areas)
-          .map((id) => ({ id, name: String(areas[id]?.name ?? id) }))
-          .sort((a, b) => a.name.localeCompare(b.name));
-
-        for (const area of list) {
-          fields.push(
-            hiddenToggle(
-              `area_${area.id}`,
-              ['areas', area.id, 'hidden'],
-              false,
-              { pt: `Mostrar: ${area.name}`, en: `Show: ${area.name}` },
-              l('Desligado = este cômodo não aparece no dashboard.', 'Off = this area is not shown in the dashboard.')
-            )
-          );
-        }
-
         return fields;
       },
     },
@@ -518,6 +504,8 @@ class MushroomStrategyEditor extends HTMLElement {
   private _forms: any[] = [];
   private _built = false;
   private _open = new Set<string>();
+  /** True while the areas are ordered by hand (some area has an `order`); undefined until first needed. */
+  private _manualAreas: boolean | undefined;
 
   set hass(hass: any) {
     const first = !this._hass;
@@ -732,6 +720,8 @@ class MushroomStrategyEditor extends HTMLElement {
       if (form) this._forms.push(form);
     }
 
+    if (section.areaOrder) this._areaBlocks(lang).forEach((block) => panel.appendChild(block));
+
     for (const sub of section.sub ?? []) {
       const child = this._panel(sub, lang);
 
@@ -780,12 +770,17 @@ class MushroomStrategyEditor extends HTMLElement {
 
   /** Writes (or removes, when equal to the default) one value and notifies Home Assistant. */
   private _write(path: string[], value: any, def: any): void {
+    this._writeMany([{ path, value, def }]);
+  }
+
+  /** Writes (or removes) several values at once and notifies Home Assistant a single time. */
+  private _writeMany(items: { path: string[]; value: any; def: any }[]): void {
     if (!this._config) return;
 
     // Work on a copy of the options, whatever shape the stored config has.
     const working = optionsOf(this._config);
 
-    setPath(working, path, value, def);
+    for (const item of items) setPath(working, item.path, item.value, item.def);
 
     // Always store the flat shape: options directly next to `type` (no `options` key).
     const config: Obj = { type: this._config['type'], ...working };
@@ -848,6 +843,111 @@ class MushroomStrategyEditor extends HTMLElement {
     });
 
     return button;
+  }
+
+  /** The areas of Home Assistant, sorted like the dashboard shows them: by `order`, then by name. */
+  private _areaList(): { id: string; name: string }[] {
+    const areas: Obj = this._hass?.areas ?? {};
+    const options = optionsOf(this._config);
+    const orderOf = (id: string): number => {
+      const order = getPath(options, ['areas', id, 'order']);
+
+      return typeof order === 'number' ? order : Infinity;
+    };
+
+    return Object.keys(areas)
+      .map((id) => ({ id, name: String(areas[id]?.name ?? id) }))
+      .sort((a, b) => orderOf(a.id) - orderOf(b.id) || a.name.localeCompare(b.name));
+  }
+
+  /** Whether the areas are ordered by hand. Starts as true when any area already has an `order` in the config. */
+  private _isManualAreas(): boolean {
+    if (this._manualAreas === undefined) {
+      const options = optionsOf(this._config);
+
+      this._manualAreas = this._areaList().some((area) => typeof getPath(options, ['areas', area.id, 'order']) === 'number');
+    }
+
+    return this._manualAreas;
+  }
+
+  /** Stores the given area order as `order` values (10, 20, 30...). */
+  private _saveAreaOrder(list: { id: string }[]): void {
+    this._writeMany(list.map((area, index) => ({ path: ['areas', area.id, 'order'], value: (index + 1) * 10, def: undefined })));
+  }
+
+  /** Builds the alphabetical/manual order switch and one row per area (with up/down buttons when manual). */
+  private _areaBlocks(lang: 'pt' | 'en'): HTMLElement[] {
+    const manual = this._isManualAreas();
+    const blocks: HTMLElement[] = [];
+    const wrap = document.createElement('div');
+    const sw: any = document.createElement('ha-switch');
+    const orderField: Field = {
+      id: 'a_alpha',
+      path: [],
+      kind: 'bool',
+      def: true,
+      label: l('Ordem alfabética dos cômodos', 'Alphabetical area order'),
+      helper: l(
+        'Ligado = os cômodos aparecem em ordem alfabética. Desligado = aparecem setas ↑ ↓ ao lado de cada cômodo para você escolher a ordem. Com "Separar cômodos por andar", a ordem vale dentro de cada andar.',
+        'On = areas are listed alphabetically. Off = ↑ ↓ buttons appear next to each area so you can choose the order. With "Group areas by floor", the order applies within each floor.'
+      ),
+    };
+
+    wrap.className = 'nv-ctl nv-sw';
+    sw.checked = !manual;
+    sw.addEventListener('change', () => {
+      if (sw.checked) {
+        // Back to alphabetical: forget the manual order.
+        this._manualAreas = false;
+        this._writeMany(this._areaList().map((area) => ({ path: ['areas', area.id, 'order'], value: undefined, def: undefined })));
+      } else {
+        // Start manual from what is shown now, so nothing moves until the user moves it.
+        this._manualAreas = true;
+        this._saveAreaOrder(this._areaList());
+      }
+
+      this._render();
+    });
+    wrap.appendChild(sw);
+    blocks.push(this._row(orderField, lang, wrap));
+
+    const list = this._areaList();
+
+    list.forEach((area, index) => {
+      const field = hiddenToggle(
+        `area_${area.id}`,
+        ['areas', area.id, 'hidden'],
+        false,
+        { pt: `Mostrar: ${area.name}`, en: `Show: ${area.name}` },
+        l('Desligado = este cômodo não aparece no dashboard.', 'Off = this area is not shown in the dashboard.')
+      );
+      const { row } = this._control(field, lang);
+
+      if (manual) {
+        const group = document.createElement('div');
+        const move = (to: number): void => {
+          const next = this._areaList();
+
+          [next[index], next[to]] = [next[to] as { id: string; name: string }, next[index] as { id: string; name: string }];
+          this._saveAreaOrder(next);
+          this._render();
+        };
+        const up = this._button('↑', () => move(index - 1));
+        const down = this._button('↓', () => move(index + 1));
+
+        group.className = 'nv-ctl';
+        group.style.gap = '4px';
+        if (index === 0) up.style.visibility = 'hidden';
+        if (index === list.length - 1) down.style.visibility = 'hidden';
+        group.append(up, down);
+        row.insertBefore(group, row.lastElementChild);
+      }
+
+      blocks.push(row);
+    });
+
+    return blocks;
   }
 
   /** Title of a chip in the list: own name, then its text, then the entity's name in Home Assistant, then the entity id. */
