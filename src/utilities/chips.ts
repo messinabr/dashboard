@@ -8,6 +8,8 @@ import { LovelaceBadgeConfig } from '../types/homeassistant/data/lovelace/config
  * write them by hand.
  */
 export interface ChipConfig {
+  /** Name used only to recognize the chip in the editor. It is not shown on the dashboard. */
+  name?: string;
   /** Entity the chip follows. */
   entity: string;
   /** Optional text shown under the icon. */

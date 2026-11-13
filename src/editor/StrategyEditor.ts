@@ -368,6 +368,7 @@ const CHIP_TXT = {
     { value: 'none', label: l('Nada', 'Nothing') },
   ],
   fields: {
+    name: [l('Nome do chip (só para você)', 'Chip name (for you only)'), l('Nome para identificar este chip aqui no editor, ex.: "Alarme" ou "Cerca virtual". Não aparece no dashboard. Em branco = usa o nome da entidade no Home Assistant.', 'A name to recognize this chip in the editor, e.g. "Alarm". It does not show on the dashboard. Empty = uses the entity name from Home Assistant.')],
     entity: [l('Entidade', 'Entity'), l('A entidade que o chip acompanha. O estado dela decide qual aparência o chip mostra.', 'The entity the chip follows. Its state decides the look.')],
     label: [l('Texto (opcional)', 'Text (optional)'), l('Texto pequeno mostrado no chip, ao lado do ícone.', 'Small text shown in the chip.')],
     when: [l('Chip ativo quando...', 'Chip is active when...'), l('Regra que define o estado 1 (ativo). Fora da regra, o chip fica no estado 2 (inativo).', 'Rule for state 1 (active). Otherwise the chip is in state 2.')],
@@ -807,6 +808,7 @@ class MushroomStrategyEditor extends HTMLElement {
     });
 
     return [
+      { name: 'name', required: false, selector: { text: {} } },
       { name: 'entity', required: true, selector: { entity: {} } },
       { name: 'label', required: false, selector: { text: {} } },
       { name: 'when', selector: select(CHIP_TXT.whenOptions) },
@@ -846,6 +848,13 @@ class MushroomStrategyEditor extends HTMLElement {
     return button;
   }
 
+  /** Title of a chip in the list: own name, then its text, then the entity's name in Home Assistant, then the entity id. */
+  private _chipTitle(chip: ChipConfig, lang: 'pt' | 'en'): string {
+    const friendly = chip.entity ? this._hass?.states?.[chip.entity]?.attributes?.friendly_name : undefined;
+
+    return chip.name || chip.label || (typeof friendly === 'string' ? friendly : '') || chip.entity || CHIP_TXT.title[lang];
+  }
+
   /** Builds the chips list editor (one collapsible block per chip, plus add/remove/reorder). */
   private _chipsBlocks(lang: 'pt' | 'en'): HTMLElement[] {
     const chips = this._getChips();
@@ -868,7 +877,8 @@ class MushroomStrategyEditor extends HTMLElement {
       head.slot = 'header';
       head.className = 'nv-head nv-chiphead';
       title.className = 'nv-chiptitle';
-      title.textContent = chip.label || chip.entity || CHIP_TXT.title[lang];
+      title.textContent = this._chipTitle(chip, lang);
+      title.title = chip.entity ?? '';
       head.appendChild(title);
 
       if (index > 0) {
@@ -947,7 +957,8 @@ class MushroomStrategyEditor extends HTMLElement {
         }
 
         current.when = next.when;
-        title.textContent = next.label || next.entity || CHIP_TXT.title[lang];
+        title.textContent = this._chipTitle(next, lang);
+        title.title = next.entity ?? '';
       });
 
       const box = document.createElement('div');
