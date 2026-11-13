@@ -176,6 +176,7 @@ export const ConfigurationDefaults: StrategyConfig = {
       greeting: true,
       persons: false,
     },
+    areas_by_floor: false,
     stack_count: {
       _: 2,
     },

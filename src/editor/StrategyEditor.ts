@@ -210,6 +210,17 @@ const SECTIONS: Section[] = [
         l('Mostra a grade de cômodos na tela inicial. Desligado = a lista não aparece na tela inicial.', 'Shows the area grid on the home view. Off = the list is not shown.')
       ),
       {
+        id: 'h_areas_by_floor',
+        path: ['home_view', 'areas_by_floor'],
+        kind: 'bool',
+        def: false,
+        label: l('Separar cômodos por andar', 'Group areas by floor'),
+        helper: l(
+          'Mostra um título por andar (Térreo, Primeiro Andar...) com os cômodos dele embaixo. Usa os andares cadastrados no Home Assistant, em ordem de nível; andares com o mesmo nível seguem a ordem de criação. Desligado = uma lista só.',
+          'Shows one title per floor (Ground, First floor...) with its areas below. Uses the floors set up in Home Assistant, ordered by level; floors with the same level follow creation order. Off = a single list.'
+        ),
+      },
+      {
         id: 'h_stack',
         path: ['home_view', 'stack_count', '_'],
         kind: 'number',

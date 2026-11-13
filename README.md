@@ -20,6 +20,7 @@
 |---|---|
 | **Editor visual** | Configure a estratégia pela interface do HA (sem YAML), com explicação em cada opção. |
 | **`entity_names_only`** | Os cartões mostram só o nome da entidade, sem repetir o nome do dispositivo (HA 2026.11+). |
+| **Cômodos por andar** | Opção `home_view.areas_by_floor: true`: um título por andar (usa os andares do HA) com os cômodos embaixo. |
 | **Chips** | Selos no topo da tela inicial: escolha entidade, ícone e cor para cada um dos dois estados. Os templates Jinja são gerados automaticamente, sem escrever nada. |
 
 O resto do comportamento (áreas, domínios, views, cartões) é o do projeto original. Veja a documentação dele para as demais opções.
@@ -90,6 +91,7 @@ Todo o crédito pela base do projeto é de Aalian Khan (criador original), Ferry
 |---|---|
 | **Visual editor** | Configure the strategy from the HA UI (no YAML), with an explanation under every option. |
 | **`entity_names_only`** | Cards show only the entity name, without repeating the device name (HA 2026.11+). |
+| **Areas by floor** | Option `home_view.areas_by_floor: true`: one title per floor (uses the HA floors) with its areas below. |
 | **Chips** | Badges at the top of the home view: pick an entity, an icon and a color for each of the two states. The Jinja templates are generated for you. |
 
 Everything else (areas, domains, views, cards) behaves as in the original project. See its documentation for the remaining options.

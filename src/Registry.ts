@@ -2,6 +2,7 @@ import deepmerge from 'deepmerge';
 import { HassEntities } from 'home-assistant-js-websocket';
 import { DeviceRegistryEntry } from './types/homeassistant/data/device_registry';
 import { EntityRegistryEntry } from './types/homeassistant/data/entity_registry';
+import { FloorRegistryEntry } from './types/homeassistant/data/floor_registry';
 import {
   DashboardInfo,
   StrategyConfig,
@@ -90,6 +91,18 @@ class Registry {
    */
   static get areas(): StrategyArea[] {
     return Registry._areas;
+  }
+
+  /** Entries of Home Assistant's floor registry. Empty when the registry can't be read. */
+  private static _floors: FloorRegistryEntry[] = [];
+
+  /**
+   * Home Assistant's Floor registry.
+   *
+   * @returns {FloorRegistryEntry[]} The floors, sorted by level and then by creation time.
+   */
+  static get floors(): FloorRegistryEntry[] {
+    return Registry._floors;
   }
 
   /** The Custom strategy configuration. */
@@ -307,6 +320,18 @@ class Registry {
       ]);
     } catch (e) {
       logMessage(lvlFatal, 'Error importing Home Assistant registries!', e);
+    }
+
+    // The floors are optional (only used to group the areas), so a failure here must not stop the strategy.
+    try {
+      const floors = await info.hass.callWS<FloorRegistryEntry[]>({ type: 'config/floor_registry/list' });
+
+      Registry._floors = [...floors].sort(
+        (a, b) => (a.level ?? 0) - (b.level ?? 0) || (a.created_at ?? 0) - (b.created_at ?? 0)
+      );
+    } catch (e) {
+      Registry._floors = [];
+      logMessage(lvlWarn, 'Could not read the floor registry; areas are not grouped by floor.', e);
     }
   }
 

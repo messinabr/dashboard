@@ -284,6 +284,8 @@ class HomeView extends AbstractView {
 
     const titleCard = titleHidden ? undefined : new HeaderCard({}, { title: localize('generic.areas') }).createCard();
     const cardConfigurations: (TemplateCardConfig | AreaCardConfig)[] = [];
+    const cardsByFloor = new Map<string, (TemplateCardConfig | AreaCardConfig)[]>();
+    const byFloor = Registry.strategyOptions.home_view.areas_by_floor === true && Registry.floors.length > 0;
 
     for (const area of Registry.areas) {
       const moduleName =
@@ -302,12 +304,51 @@ class HomeView extends AbstractView {
         }
       }
 
-      cardConfigurations.push(
-        new AreaCard(area, {
-          ...Registry.strategyOptions.areas['_'],
-          ...Registry.strategyOptions.areas[area.area_id],
-        }).getCard()
-      );
+      const card = new AreaCard(area, {
+        ...Registry.strategyOptions.areas['_'],
+        ...Registry.strategyOptions.areas[area.area_id],
+      }).getCard();
+
+      cardConfigurations.push(card);
+
+      const floorId = area.floor_id ?? '';
+
+      cardsByFloor.set(floorId, [...(cardsByFloor.get(floorId) ?? []), card]);
+    }
+
+    const stackOptions = {
+      'custom:mushroom-template-card': Registry.strategyOptions.home_view.stack_count.areas?.[0],
+      area: Registry.strategyOptions.home_view.stack_count.areas?.[1],
+    };
+
+    if (byFloor) {
+      const floorCards: LovelaceCardConfig[] = [];
+      const addFloor = (title: string, cards: (TemplateCardConfig | AreaCardConfig)[] | undefined) => {
+        if (!cards?.length) return; // Floors without visible areas are skipped.
+
+        floorCards.push(
+          new HeaderCard({}, { title }).createCard(),
+          ...stackHorizontal(cards, Registry.strategyOptions.home_view.stack_count['_'], stackOptions)
+        );
+      };
+
+      for (const floor of Registry.floors) {
+        addFloor(floor.name, cardsByFloor.get(floor.floor_id));
+      }
+
+      // Areas without a (known) floor go last.
+      const known = new Set(Registry.floors.map((floor) => floor.floor_id));
+      const others = [...cardsByFloor.entries()].filter(([id]) => !known.has(id)).flatMap(([, cards]) => cards);
+
+      addFloor(localize('generic.undisclosed'), others);
+
+      return {
+        type: 'vertical-stack',
+        grid_options: {
+          columns: 'full',
+        },
+        cards: titleCard ? [titleCard, ...floorCards] : floorCards,
+      };
     }
 
     return {
@@ -318,10 +359,7 @@ class HomeView extends AbstractView {
       cards: stackHorizontal(
         titleCard ? [titleCard, ...cardConfigurations] : cardConfigurations,
         Registry.strategyOptions.home_view.stack_count['_'],
-        {
-          'custom:mushroom-template-card': Registry.strategyOptions.home_view.stack_count.areas?.[0],
-          area: Registry.strategyOptions.home_view.stack_count.areas?.[1],
-        }
+        stackOptions
       ),
     };
   }
