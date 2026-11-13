@@ -1,6 +1,6 @@
 {
   "name": "mushroom-strategy-nv",
-  "version": "3.2.0-nv.8",
+  "version": "1.0.0",
   "description": "Fork of Mushroom Dashboard Strategy with a visual editor, entity names only and custom chips.",
   "keywords": [
     "dashboard",
