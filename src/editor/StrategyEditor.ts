@@ -40,6 +40,8 @@ interface Section {
   /** Marks the chips section, which has its own list editor instead of plain fields. */
   chips?: boolean;
   fields: (hass: any) => Field[];
+  /** Sub-categories: collapsible panels shown inside this section, after its own fields. */
+  sub?: Section[];
 }
 
 const l = (pt: string, en: string): L => ({ pt, en });
@@ -166,6 +168,58 @@ const SECTIONS: Section[] = [
         ),
       },
     ],
+    sub: [
+    {
+      title: l('Tipos de dispositivo', 'Device types'),
+      intro: l(
+        'Cada tipo de dispositivo tem uma seção dentro das telas dos cômodos. Desligue para esconder o tipo todo do dashboard (nada é apagado do Home Assistant).',
+        'Each device type has a section inside the areas. Turn off to hide the whole type from the dashboard.'
+      ),
+      fields: () =>
+        DOMAINS.map(([id, label, help]) =>
+          hiddenToggle(`d_${id}`, ['domains', id, 'hidden'], false, { pt: `Mostrar: ${label.pt}`, en: `Show: ${label.en}` }, help)
+        ),
+    },
+    ],
+  },
+  {
+    title: l('Menu superior (abas)', 'Top menu (tabs)'),
+    intro: l('As telas são as abas do menu no topo do dashboard. Desligue para tirar a aba do menu.', 'Views are the tabs in the top menu. Turn off to remove a tab.'),
+    fields: () =>
+      VIEWS.map(([id, label, help]) =>
+        hiddenToggle(`v_${id}`, ['views', id, 'hidden'], false, { pt: `Mostrar: ${label.pt}`, en: `Show: ${label.en}` }, help)
+      ),
+  },
+  {
+    title: l('Selos (contadores no topo)', 'Badges'),
+    intro: l('Selos são os contadores pequenos no topo da tela inicial. Escolha quais aparecem.', 'Badges are the small counters at the top of the home view.'),
+    fields: () => [
+      { id: 'b_light', path: ['badges', 'light_count'], kind: 'bool', def: true, label: l('Luzes acesas', 'Lights on'), helper: l('Selo com a quantidade de luzes acesas agora.', 'Badge with the number of lights currently on.') },
+      { id: 'b_fan', path: ['badges', 'fan_count'], kind: 'bool', def: true, label: l('Ventiladores ligados', 'Fans on'), helper: l('Selo com a quantidade de ventiladores ligados.', 'Badge with the number of fans on.') },
+      { id: 'b_cover', path: ['badges', 'cover_count'], kind: 'bool', def: true, label: l('Persianas abertas', 'Covers open'), helper: l('Selo com a quantidade de persianas e cortinas abertas.', 'Badge with the number of open covers.') },
+      { id: 'b_switch', path: ['badges', 'switch_count'], kind: 'bool', def: true, label: l('Interruptores ligados', 'Switches on'), helper: l('Selo com a quantidade de interruptores e tomadas ligados.', 'Badge with the number of switches on.') },
+      { id: 'b_climate', path: ['badges', 'climate_count'], kind: 'bool', def: true, label: l('Climatização ligada', 'Climate on'), helper: l('Selo com a quantidade de ar-condicionados e termostatos ligados.', 'Badge with the number of climate devices on.') },
+      {
+        id: 'b_weather',
+        path: ['badges', 'weather_entity'],
+        kind: 'entity',
+        def: 'auto',
+        label: l('Entidade do clima', 'Weather entity'),
+        helper: l(
+          'Entidade de clima usada nos selos de tempo e temperatura. Vazio = automática (usa a primeira entidade de clima encontrada).',
+          'Weather entity used by the weather badges. Empty = automatic (first weather entity found).'
+        ),
+      },
+    ],
+  },
+  {
+    title: l('Chips (atalhos coloridos no topo)', 'Chips'),
+    chips: true,
+    intro: l(
+      'Chips são os atalhos pequenos ao lado dos selos (ex.: pessoas em casa, alarme, cerca virtual, lixo). Cada um acompanha uma entidade e muda de ícone e cor conforme o estado dela. Os templates são gerados sozinhos.',
+      'Chips are small shortcuts next to the badges. Each follows an entity and changes icon and color with its state.'
+    ),
+    fields: () => [],
   },
   {
     title: l('Tela inicial', 'Home view'),
@@ -234,113 +288,65 @@ const SECTIONS: Section[] = [
         ),
       },
     ],
-  },
-  {
-    title: l('Selos (contadores no topo)', 'Badges'),
-    intro: l('Selos são os contadores pequenos no topo da tela inicial. Escolha quais aparecem.', 'Badges are the small counters at the top of the home view.'),
-    fields: () => [
-      { id: 'b_light', path: ['badges', 'light_count'], kind: 'bool', def: true, label: l('Luzes acesas', 'Lights on'), helper: l('Selo com a quantidade de luzes acesas agora.', 'Badge with the number of lights currently on.') },
-      { id: 'b_fan', path: ['badges', 'fan_count'], kind: 'bool', def: true, label: l('Ventiladores ligados', 'Fans on'), helper: l('Selo com a quantidade de ventiladores ligados.', 'Badge with the number of fans on.') },
-      { id: 'b_cover', path: ['badges', 'cover_count'], kind: 'bool', def: true, label: l('Persianas abertas', 'Covers open'), helper: l('Selo com a quantidade de persianas e cortinas abertas.', 'Badge with the number of open covers.') },
-      { id: 'b_switch', path: ['badges', 'switch_count'], kind: 'bool', def: true, label: l('Interruptores ligados', 'Switches on'), helper: l('Selo com a quantidade de interruptores e tomadas ligados.', 'Badge with the number of switches on.') },
-      { id: 'b_climate', path: ['badges', 'climate_count'], kind: 'bool', def: true, label: l('Climatização ligada', 'Climate on'), helper: l('Selo com a quantidade de ar-condicionados e termostatos ligados.', 'Badge with the number of climate devices on.') },
-      {
-        id: 'b_weather',
-        path: ['badges', 'weather_entity'],
-        kind: 'entity',
-        def: 'auto',
-        label: l('Entidade do clima', 'Weather entity'),
-        helper: l(
-          'Entidade de clima usada nos selos de tempo e temperatura. Vazio = automática (usa a primeira entidade de clima encontrada).',
-          'Weather entity used by the weather badges. Empty = automatic (first weather entity found).'
-        ),
+    sub: [
+    {
+      title: l('Cômodos', 'Areas'),
+      intro: l('A lista de cômodos vem do seu Home Assistant. Esconder aqui não apaga o cômodo, só tira do dashboard.', 'The list comes from your Home Assistant. Hiding here does not delete the area.'),
+      fields: (hass) => {
+        const fields: Field[] = [
+          {
+            id: 'a_type',
+            path: ['areas', '_', 'type'],
+            kind: 'select',
+            def: 'AreaCard',
+            label: l('Estilo do card de cômodo', 'Area card style'),
+            helper: l(
+              'Aparência dos cards de cômodo na tela inicial. "Mushroom" = ícone e nome (compacto). "Home Assistant" = card com a foto do cômodo. Vale para todos os cômodos.',
+              'Look of the area cards on the home view. Applies to all areas.'
+            ),
+            options: [
+              { value: 'AreaCard', label: l('Mushroom (ícone e texto)', 'Mushroom (icon and text)') },
+              { value: 'HaAreaCard', label: l('Home Assistant (com imagem do cômodo)', 'Home Assistant (with picture)') },
+            ],
+          },
+          {
+            id: 'a_ratio',
+            path: ['areas', '_', 'aspect_ratio'],
+            kind: 'ratio',
+            def: '',
+            label: l('Altura da foto do cômodo (%)', 'Area picture height (%)'),
+            helper: l(
+              'Só vale para o estilo "Home Assistant". É a altura da foto em porcentagem da largura: quanto menor, mais fino o card (a foto é cortada em cima e embaixo). Padrão do HA = 56 (proporção 16:9). Ex.: 39 deixa o card bem mais fino. Também aceita proporção, como 16:9. Vazio = padrão.',
+              'Only for the "Home Assistant" style. The picture height as a percentage of its width: the smaller, the thinner the card (the picture is cropped top and bottom). HA default = 56 (16:9). E.g. 39 makes the card much thinner. Also accepts a ratio like 16:9. Empty = default.'
+            ),
+          },
+        ];
+        const areas: Obj = hass?.areas ?? {};
+        const list = Object.keys(areas)
+          .map((id) => ({ id, name: String(areas[id]?.name ?? id) }))
+          .sort((a, b) => a.name.localeCompare(b.name));
+        list.push({ id: 'undisclosed', name: '' });
+
+        for (const area of list) {
+          const undisclosed = area.id === 'undisclosed';
+          const name = undisclosed ? l('Entidades sem cômodo', 'Entities without area') : l(area.name, area.name);
+          fields.push(
+            hiddenToggle(
+              `area_${area.id}`,
+              ['areas', area.id, 'hidden'],
+              false,
+              { pt: `Mostrar: ${name.pt}`, en: `Show: ${name.en}` },
+              undisclosed
+                ? l('Grupo das entidades que não têm cômodo definido no Home Assistant.', 'Group of entities that have no area set in Home Assistant.')
+                : l('Desligado = este cômodo não aparece no dashboard.', 'Off = this area is not shown in the dashboard.')
+            )
+          );
+        }
+
+        return fields;
       },
-    ],
-  },
-  {
-    title: l('Chips (atalhos coloridos no topo)', 'Chips'),
-    chips: true,
-    intro: l(
-      'Chips são os atalhos pequenos ao lado dos selos (ex.: pessoas em casa, alarme, cerca virtual, lixo). Cada um acompanha uma entidade e muda de ícone e cor conforme o estado dela. Os templates são gerados sozinhos.',
-      'Chips are small shortcuts next to the badges. Each follows an entity and changes icon and color with its state.'
-    ),
-    fields: () => [],
-  },
-  {
-    title: l('Cômodos', 'Areas'),
-    intro: l('A lista de cômodos vem do seu Home Assistant. Esconder aqui não apaga o cômodo, só tira do dashboard.', 'The list comes from your Home Assistant. Hiding here does not delete the area.'),
-    fields: (hass) => {
-      const fields: Field[] = [
-        {
-          id: 'a_type',
-          path: ['areas', '_', 'type'],
-          kind: 'select',
-          def: 'AreaCard',
-          label: l('Estilo do card de cômodo', 'Area card style'),
-          helper: l(
-            'Aparência dos cards de cômodo na tela inicial. "Mushroom" = ícone e nome (compacto). "Home Assistant" = card com a foto do cômodo. Vale para todos os cômodos.',
-            'Look of the area cards on the home view. Applies to all areas.'
-          ),
-          options: [
-            { value: 'AreaCard', label: l('Mushroom (ícone e texto)', 'Mushroom (icon and text)') },
-            { value: 'HaAreaCard', label: l('Home Assistant (com imagem do cômodo)', 'Home Assistant (with picture)') },
-          ],
-        },
-        {
-          id: 'a_ratio',
-          path: ['areas', '_', 'aspect_ratio'],
-          kind: 'ratio',
-          def: '',
-          label: l('Altura da foto do cômodo (%)', 'Area picture height (%)'),
-          helper: l(
-            'Só vale para o estilo "Home Assistant". É a altura da foto em porcentagem da largura: quanto menor, mais fino o card (a foto é cortada em cima e embaixo). Padrão do HA = 56 (proporção 16:9). Ex.: 39 deixa o card bem mais fino. Também aceita proporção, como 16:9. Vazio = padrão.',
-            'Only for the "Home Assistant" style. The picture height as a percentage of its width: the smaller, the thinner the card (the picture is cropped top and bottom). HA default = 56 (16:9). E.g. 39 makes the card much thinner. Also accepts a ratio like 16:9. Empty = default.'
-          ),
-        },
-      ];
-      const areas: Obj = hass?.areas ?? {};
-      const list = Object.keys(areas)
-        .map((id) => ({ id, name: String(areas[id]?.name ?? id) }))
-        .sort((a, b) => a.name.localeCompare(b.name));
-      list.push({ id: 'undisclosed', name: '' });
-
-      for (const area of list) {
-        const undisclosed = area.id === 'undisclosed';
-        const name = undisclosed ? l('Entidades sem cômodo', 'Entities without area') : l(area.name, area.name);
-        fields.push(
-          hiddenToggle(
-            `area_${area.id}`,
-            ['areas', area.id, 'hidden'],
-            false,
-            { pt: `Mostrar: ${name.pt}`, en: `Show: ${name.en}` },
-            undisclosed
-              ? l('Grupo das entidades que não têm cômodo definido no Home Assistant.', 'Group of entities that have no area set in Home Assistant.')
-              : l('Desligado = este cômodo não aparece no dashboard.', 'Off = this area is not shown in the dashboard.')
-          )
-        );
-      }
-
-      return fields;
     },
-  },
-  {
-    title: l('Tipos de dispositivo (nas telas dos cômodos)', 'Domains'),
-    intro: l(
-      'Cada tipo de dispositivo tem uma seção dentro dos cômodos. Desligue para esconder o tipo todo do dashboard (nada é apagado do Home Assistant).',
-      'Each device type has a section inside the areas. Turn off to hide the whole type from the dashboard.'
-    ),
-    fields: () =>
-      DOMAINS.map(([id, label, help]) =>
-        hiddenToggle(`d_${id}`, ['domains', id, 'hidden'], false, { pt: `Mostrar: ${label.pt}`, en: `Show: ${label.en}` }, help)
-      ),
-  },
-  {
-    title: l('Telas do menu superior', 'Views'),
-    intro: l('As telas são as abas do menu no topo do dashboard. Desligue para tirar a aba do menu.', 'Views are the tabs in the top menu. Turn off to remove a tab.'),
-    fields: () =>
-      VIEWS.map(([id, label, help]) =>
-        hiddenToggle(`v_${id}`, ['views', id, 'hidden'], false, { pt: `Mostrar: ${label.pt}`, en: `Show: ${label.en}` }, help)
-      ),
+    ],
   },
 ];
 
@@ -467,6 +473,7 @@ const STYLE = `
     --expansion-panel-summary-padding: 0 12px;
     --expansion-panel-content-padding: 0;
   }
+  mushroom-strategy-nv-editor ha-expansion-panel.nv-sub { margin: 6px 8px 8px; }
   mushroom-strategy-nv-editor .nv-head { font-size: 13px; font-weight: 500; }
   mushroom-strategy-nv-editor .nv-intro {
     font-size: 11px; line-height: 1.35; margin: 0; padding: 2px 12px 6px;
@@ -682,6 +689,56 @@ class MushroomStrategyEditor extends HTMLElement {
     return { row: this._row(field, lang, form, true), form };
   }
 
+  /** Builds one collapsible panel for a section, including its sub-categories (nested panels). */
+  private _panel(section: Section, lang: 'pt' | 'en'): HTMLElement {
+    const fields = section.fields(this._hass);
+    const panel: any = document.createElement('ha-expansion-panel');
+    const head = document.createElement('div');
+
+    head.slot = 'header';
+    head.className = 'nv-head';
+    head.textContent = section.title[lang];
+    panel.appendChild(head);
+    panel.outlined = true;
+    panel.header = section.title[lang];
+    panel.expanded = this._open.has(section.title.en) || (section.open === true && !this._open.has('__init'));
+    panel.addEventListener('expanded-changed', (ev: CustomEvent) => {
+      // Ignore events bubbling up from nested panels.
+      if (ev.target !== panel) return;
+
+      this._open.add('__init');
+
+      if (ev.detail?.expanded) this._open.add(section.title.en);
+      else this._open.delete(section.title.en);
+    });
+
+    if (section.intro) {
+      const intro = document.createElement('p');
+
+      intro.className = 'nv-intro';
+      intro.textContent = section.intro[lang];
+      panel.appendChild(intro);
+    }
+
+    if (section.chips) this._chipsBlocks(lang).forEach((block) => panel.appendChild(block));
+
+    for (const field of fields) {
+      const { row, form } = this._control(field, lang);
+
+      panel.appendChild(row);
+      if (form) this._forms.push(form);
+    }
+
+    for (const sub of section.sub ?? []) {
+      const child = this._panel(sub, lang);
+
+      child.classList.add('nv-sub');
+      panel.appendChild(child);
+    }
+
+    return panel;
+  }
+
   private _render(): void {
     if (!this._hass || !this._config) return;
 
@@ -696,44 +753,7 @@ class MushroomStrategyEditor extends HTMLElement {
     style.textContent = STYLE;
     this.appendChild(style);
 
-    for (const section of SECTIONS) {
-      const fields = section.fields(this._hass);
-      const panel: any = document.createElement('ha-expansion-panel');
-      const head = document.createElement('div');
-
-      head.slot = 'header';
-      head.className = 'nv-head';
-      head.textContent = section.title[lang];
-      panel.appendChild(head);
-      panel.outlined = true;
-      panel.header = section.title[lang];
-      panel.expanded = this._open.has(section.title.en) || (section.open === true && !this._open.has('__init'));
-      panel.addEventListener('expanded-changed', (ev: CustomEvent) => {
-        this._open.add('__init');
-
-        if (ev.detail?.expanded) this._open.add(section.title.en);
-        else this._open.delete(section.title.en);
-      });
-
-      if (section.intro) {
-        const intro = document.createElement('p');
-
-        intro.className = 'nv-intro';
-        intro.textContent = section.intro[lang];
-        panel.appendChild(intro);
-      }
-
-      if (section.chips) this._chipsBlocks(lang).forEach((block) => panel.appendChild(block));
-
-      for (const field of fields) {
-        const { row, form } = this._control(field, lang);
-
-        panel.appendChild(row);
-        if (form) this._forms.push(form);
-      }
-
-      this.appendChild(panel);
-    }
+    for (const section of SECTIONS) this.appendChild(this._panel(section, lang));
 
     const note = document.createElement('p');
 
