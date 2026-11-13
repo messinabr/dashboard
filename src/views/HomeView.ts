@@ -347,7 +347,8 @@ class HomeView extends AbstractView {
         grid_options: {
           columns: 'full',
         },
-        cards: titleCard ? [titleCard, ...floorCards] : floorCards,
+        // The floor titles replace the general "Areas" title.
+        cards: floorCards,
       };
     }
 

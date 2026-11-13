@@ -216,8 +216,8 @@ const SECTIONS: Section[] = [
         def: false,
         label: l('Separar cômodos por andar', 'Group areas by floor'),
         helper: l(
-          'Mostra um título por andar (Térreo, Primeiro Andar...) com os cômodos dele embaixo. Usa os andares cadastrados no Home Assistant, em ordem de nível; andares com o mesmo nível seguem a ordem de criação. Desligado = uma lista só.',
-          'Shows one title per floor (Ground, First floor...) with its areas below. Uses the floors set up in Home Assistant, ordered by level; floors with the same level follow creation order. Off = a single list.'
+          'Mostra um título por andar (Térreo, Primeiro Andar...) com os cômodos dele embaixo, no lugar do título "Cômodos". Usa os andares cadastrados no Home Assistant, em ordem de nível; andares com o mesmo nível seguem a ordem de criação. Desligado = uma lista só.',
+          'Shows one title per floor (Ground, First floor...) with its areas below, instead of the "Areas" title. Uses the floors set up in Home Assistant, ordered by level; floors with the same level follow creation order. Off = a single list.'
         ),
       },
       {
