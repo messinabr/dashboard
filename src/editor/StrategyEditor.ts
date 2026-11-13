@@ -264,17 +264,6 @@ const SECTIONS: Section[] = [
         l('Mostra a grade de cômodos na tela inicial. Desligado = a lista não aparece na tela inicial.', 'Shows the area grid on the home view. Off = the list is not shown.')
       ),
       {
-        id: 'h_areas_by_floor',
-        path: ['home_view', 'areas_by_floor'],
-        kind: 'bool',
-        def: false,
-        label: l('Separar cômodos por andar', 'Group areas by floor'),
-        helper: l(
-          'Mostra um título por andar (Térreo, Primeiro Andar...) com os cômodos dele embaixo, no lugar do título "Cômodos". Usa os andares cadastrados no Home Assistant, em ordem de nível; andares com o mesmo nível seguem a ordem de criação. Desligado = uma lista só.',
-          'Shows one title per floor (Ground, First floor...) with its areas below, instead of the "Areas" title. Uses the floors set up in Home Assistant, ordered by level; floors with the same level follow creation order. Off = a single list.'
-        ),
-      },
-      {
         id: 'h_stack',
         path: ['home_view', 'stack_count', '_'],
         kind: 'number',
@@ -310,6 +299,17 @@ const SECTIONS: Section[] = [
             ],
           },
           {
+            id: 'h_areas_by_floor',
+            path: ['home_view', 'areas_by_floor'],
+            kind: 'bool',
+            def: false,
+            label: l('Separar cômodos por andar', 'Group areas by floor'),
+            helper: l(
+              'Mostra um título por andar (Térreo, Primeiro Andar...) com os cômodos dele embaixo, no lugar do título "Cômodos". Usa os andares cadastrados no Home Assistant, em ordem de nível; andares com o mesmo nível seguem a ordem de criação. Desligado = uma lista só.',
+              'Shows one title per floor (Ground, First floor...) with its areas below, instead of the "Areas" title. Uses the floors set up in Home Assistant, ordered by level; floors with the same level follow creation order. Off = a single list.'
+            ),
+          },
+          {
             id: 'a_ratio',
             path: ['areas', '_', 'aspect_ratio'],
             kind: 'ratio',
@@ -320,25 +320,27 @@ const SECTIONS: Section[] = [
               'Only for the "Home Assistant" style. The picture height as a percentage of its width: the smaller, the thinner the card (the picture is cropped top and bottom). HA default = 56 (16:9). E.g. 39 makes the card much thinner. Also accepts a ratio like 16:9. Empty = default.'
             ),
           },
+          hiddenToggle(
+            'area_undisclosed',
+            ['areas', 'undisclosed', 'hidden'],
+            false,
+            l('Mostrar: Entidades sem cômodo', 'Show: Entities without area'),
+            l('Grupo das entidades que não têm cômodo definido no Home Assistant.', 'Group of entities that have no area set in Home Assistant.')
+          ),
         ];
         const areas: Obj = hass?.areas ?? {};
         const list = Object.keys(areas)
           .map((id) => ({ id, name: String(areas[id]?.name ?? id) }))
           .sort((a, b) => a.name.localeCompare(b.name));
-        list.push({ id: 'undisclosed', name: '' });
 
         for (const area of list) {
-          const undisclosed = area.id === 'undisclosed';
-          const name = undisclosed ? l('Entidades sem cômodo', 'Entities without area') : l(area.name, area.name);
           fields.push(
             hiddenToggle(
               `area_${area.id}`,
               ['areas', area.id, 'hidden'],
               false,
-              { pt: `Mostrar: ${name.pt}`, en: `Show: ${name.en}` },
-              undisclosed
-                ? l('Grupo das entidades que não têm cômodo definido no Home Assistant.', 'Group of entities that have no area set in Home Assistant.')
-                : l('Desligado = este cômodo não aparece no dashboard.', 'Off = this area is not shown in the dashboard.')
+              { pt: `Mostrar: ${area.name}`, en: `Show: ${area.name}` },
+              l('Desligado = este cômodo não aparece no dashboard.', 'Off = this area is not shown in the dashboard.')
             )
           );
         }
