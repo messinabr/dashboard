@@ -2,11 +2,11 @@
 
 🇧🇷 [Português](#português) · 🇺🇸 [English](#english)
 
-> **Fork modificado** do [Mushroom Dashboard Strategy](https://github.com/DigiLive/mushroom-strategy) de Ferry Cools (DigiLive),
+> **Fork modificado** do [Mushroom Dashboard Strategy](https://github.com/DigiLive/mushroom-strategy) de Ferry Cools (DigiLive, atual mantenedor), criado originalmente por [Aalian Khan](https://github.com/AalianKhan/mushroom-strategy),
 > licença BSD 3-Clause. O projeto original e sua documentação completa continuam em
 > <https://digilive.github.io/mushroom-strategy/>. Este fork **não é afiliado nem endossado** pelo autor original.
 >
-> **Modified fork** of [Mushroom Dashboard Strategy](https://github.com/DigiLive/mushroom-strategy) by Ferry Cools (DigiLive),
+> **Modified fork** of [Mushroom Dashboard Strategy](https://github.com/DigiLive/mushroom-strategy) by Ferry Cools (DigiLive, current maintainer), originally created by [Aalian Khan](https://github.com/AalianKhan/mushroom-strategy),
 > BSD 3-Clause license. The original project and its full documentation remain at
 > <https://digilive.github.io/mushroom-strategy/>. This fork is **not affiliated with or endorsed by** the original author.
 
@@ -78,7 +78,7 @@ npm run build   # gera dist/mushroom-strategy-nv.js
 ### Licença e créditos
 
 BSD 3-Clause. Copyright (c) 2025 Ferry Cools; modificações (c) 2026 messinabr. Veja [LICENSE](LICENSE).
-Todo o crédito pela base do projeto é de Ferry Cools e colaboradores.
+Todo o crédito pela base do projeto é de Aalian Khan (criador original), Ferry Cools (DigiLive) e colaboradores.
 
 ---
 
@@ -130,4 +130,4 @@ npm run build   # outputs dist/mushroom-strategy-nv.js
 ### License and credits
 
 BSD 3-Clause. Copyright (c) 2025 Ferry Cools; modifications (c) 2026 messinabr. See [LICENSE](LICENSE).
-All credit for the base project goes to Ferry Cools and contributors.
+All credit for the base project goes to Aalian Khan (original creator), Ferry Cools (DigiLive) and contributors.
