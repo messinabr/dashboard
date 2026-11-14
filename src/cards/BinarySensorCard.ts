@@ -14,7 +14,6 @@ class BinarySensorCard extends SensorCard {
   static getDefaultConfig(): EntityCardConfig {
     return {
       type: 'custom:mushroom-entity-card',
-      icon: 'mdi:power-cycle',
       icon_color: 'green',
     };
   }
@@ -28,7 +27,9 @@ class BinarySensorCard extends SensorCard {
   constructor(entity: EntityRegistryEntry, customConfiguration?: EntityCardConfig) {
     super(entity);
 
-    this.configuration = { ...this.configuration, ...BinarySensorCard.getDefaultConfig(), ...customConfiguration };
+    // No icon is set here, so the card shows the icon of the entity or of its device class (door, window, motion...).
+    // The configuration of the parent SensorCard is not reused: it holds a fixed icon and mini-graph-card options.
+    this.configuration = { ...BinarySensorCard.getDefaultConfig(), ...customConfiguration };
   }
 }
 
