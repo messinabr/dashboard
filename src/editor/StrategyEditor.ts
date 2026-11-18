@@ -313,6 +313,17 @@ const SECTIONS: Section[] = [
             ),
           },
           {
+            id: 'h_floor_sections',
+            path: ['home_view', 'floor_sections'],
+            kind: 'bool',
+            def: false,
+            label: l('Uma coluna por andar (tela larga)', 'One column per floor (wide screen)'),
+            helper: l(
+              'Só vale com "Separar cômodos por andar" ligado. Em telas largas (desktop), cada andar vira uma coluna ao lado da outra, aproveitando melhor a tela; o card das pessoas fica no alto da primeira coluna. No celular continua uma lista só. Desligado = comportamento anterior.',
+              'Only with "Group areas by floor" on. On wide screens each floor becomes its own column side by side; the persons card sits on top of the first column. On phones it stays a single list. Off = previous behaviour.'
+            ),
+          },
+          {
             id: 'a_ratio',
             path: ['areas', '_', 'aspect_ratio'],
             kind: 'ratio',

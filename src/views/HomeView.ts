@@ -31,6 +31,9 @@ class HomeView extends AbstractView {
   /** The domain of the entities that the view is representing. */
   static readonly domain = 'home' as const;
 
+  /** Cards per floor (title + rows), filled by createAreaCards() when `floor_sections` is on. */
+  private floorSections: LovelaceCardConfig[][] = [];
+
   /**
    * Class constructor.
    *
@@ -65,11 +68,16 @@ class HomeView extends AbstractView {
    * The configuration includes the card configurations which are created by createSections().
    */
   async getView(): Promise<LovelaceViewConfig> {
-    return {
-      ...this.baseConfiguration,
-      badges: await this.createBadgeSection(),
-      sections: await this.createSections(),
-    };
+    const badges = await this.createBadgeSection();
+    const sections = await this.createSections();
+    const configuration: LovelaceViewConfig = { ...this.baseConfiguration, badges, sections };
+
+    // One column per floor: allow as many columns as there are floors (up to 4) on wide screens.
+    if (this.floorSections.length > 1) {
+      configuration.max_columns = Math.max(configuration.max_columns ?? 3, Math.min(4, this.floorSections.length));
+    }
+
+    return configuration;
   }
 
   /**
@@ -83,6 +91,8 @@ class HomeView extends AbstractView {
       LARGE: '(min-width: 1344px)',
     };
     const sections: LovelaceSectionRawConfig[] = [];
+
+    type SectionConfiguration = [string, (LovelaceCardConfig | undefined)[], string | undefined, boolean];
 
     const addSection = (title: string, cards: LovelaceCardConfig[], mediaQuery?: string) => {
       const section: LovelaceSectionRawConfig = {
@@ -106,7 +116,7 @@ class HomeView extends AbstractView {
     try {
       const [personCards, areaCards] = await Promise.all([this.createPersonCards(), this.createAreaCards()]);
 
-      const sectionConfigurations = [
+      const sectionConfigurations: SectionConfiguration[] = [
         ['Persons', [personCards], MEDIA_QUERY.SMALL, !!personCards],
         [
           'Quick Access Wide',
@@ -121,7 +131,7 @@ class HomeView extends AbstractView {
           'Persons and Areas',
           [personCards, areaCards].filter(Boolean),
           MEDIA_QUERY.LARGE,
-          !!(personCards ?? areaCards),
+          !!(personCards ?? areaCards) && this.floorSections.length === 0,
         ],
         [
           'Quick Access Narrow',
@@ -139,11 +149,27 @@ class HomeView extends AbstractView {
           undefined,
           true,
         ],
-      ] as const;
+      ];
+
+      // One section (column) per floor on wide screens. The persons card goes on top of the first floor.
+      const floorSectionConfigurations = this.floorSections.map(
+        (cards, index): SectionConfiguration => [
+          `Floor ${index + 1}`,
+          index === 0 ? [personCards, ...cards] : cards,
+          MEDIA_QUERY.LARGE,
+          true,
+        ]
+      );
+
+      sectionConfigurations.splice(2, 0, ...floorSectionConfigurations);
 
       sectionConfigurations.forEach(([title, cards, mediaQuery, condition]) => {
         if (condition && cards.length) {
-          addSection(title, cards as LovelaceCardConfig[], mediaQuery);
+          addSection(
+            title,
+            cards.filter((card): card is LovelaceCardConfig => !!card),
+            mediaQuery
+          );
           return;
         }
         logMessage(lvlInfo, `Section ${title} has no entities available.`);
@@ -323,13 +349,17 @@ class HomeView extends AbstractView {
 
     if (byFloor) {
       const floorCards: LovelaceCardConfig[] = [];
+      const floorSections: LovelaceCardConfig[][] = [];
       const addFloor = (title: string, cards: (TemplateCardConfig | AreaCardConfig)[] | undefined) => {
         if (!cards?.length) return; // Floors without visible areas are skipped.
 
-        floorCards.push(
+        const floorStack = [
           new HeaderCard({}, { title }).createCard(),
-          ...stackHorizontal(cards, Registry.strategyOptions.home_view.stack_count['_'], stackOptions)
-        );
+          ...stackHorizontal(cards, Registry.strategyOptions.home_view.stack_count['_'], stackOptions),
+        ];
+
+        floorCards.push(...floorStack);
+        floorSections.push([{ type: 'vertical-stack', cards: floorStack }]);
       };
 
       for (const floor of Registry.floors) {
@@ -341,6 +371,9 @@ class HomeView extends AbstractView {
       const others = [...cardsByFloor.entries()].filter(([id]) => !known.has(id)).flatMap(([, cards]) => cards);
 
       addFloor(localize('generic.undisclosed'), others);
+
+      // Optional: one section (column) per floor on wide screens.
+      this.floorSections = Registry.strategyOptions.home_view.floor_sections === true ? floorSections : [];
 
       return {
         type: 'vertical-stack',

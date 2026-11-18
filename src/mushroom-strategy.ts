@@ -317,7 +317,7 @@ customStrategies.push({
   description: 'Mushroom Strategy fork with entity-name-only option and a visual editor.',
 });
 
-const STRATEGY_VERSION = 'v1.0.2';
+const STRATEGY_VERSION = 'v1.1.0';
 console.info(
   '%c Mushroom Strategy %c '.concat(STRATEGY_VERSION, ' '),
   'color: white; background: coral; font-weight: 700;',
