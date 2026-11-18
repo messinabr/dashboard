@@ -234,6 +234,7 @@ export interface DefaultDomainConfig extends SingleDomainConfig {
  * @property {Record<HomeViewSections, boolean>} home_view.hidden - Visibility settings for the home view sections.
  * @property {boolean} [home_view.areas_by_floor] - If True, the areas are grouped by floor.
  * @property {boolean} [home_view.floor_sections] - If True (and areas_by_floor is on), wide screens show one column per floor.
+ * @property {string[]} [home_view.floor_order] - Floor ids in the wanted order; floors left out follow by level.
  * @property {Object} home_view.stack_count - Controls the number of cards per row in different sections.
  * @property {number} home_view.stack_count._ - Default number of cards per row.
  * @property {boolean} show_positions - Whether to show a positional item's position.
@@ -263,6 +264,8 @@ export interface StrategyConfig {
     areas_by_floor?: boolean;
     /** If True (with areas_by_floor), wide screens show one section (column) per floor. */
     floor_sections?: boolean;
+    /** Floor ids in the order the user wants them (floors left out follow by level). */
+    floor_order?: string[];
     stack_count: { _: number } & { [K in HomeViewSections]?: K extends 'areas' ? [number, number] : number };
   };
   show_positions: boolean;

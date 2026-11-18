@@ -178,6 +178,7 @@ export const ConfigurationDefaults: StrategyConfig = {
     },
     areas_by_floor: false,
     floor_sections: false,
+    floor_order: [],
     stack_count: {
       _: 2,
     },

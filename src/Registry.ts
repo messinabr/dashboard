@@ -331,8 +331,19 @@ class Registry {
     try {
       const floors = await info.hass.callWS<FloorRegistryEntry[]>({ type: 'config/floor_registry/list' });
 
+      const manualOrder = Registry.strategyOptions.home_view.floor_order ?? [];
+      const rankOf = (id: string): number => {
+        const index = manualOrder.indexOf(id);
+
+        return index === -1 ? Infinity : index;
+      };
+
+      // Floors listed in `home_view.floor_order` come first, in that order; the others follow by level and creation time.
       Registry._floors = [...floors].sort(
-        (a, b) => (a.level ?? 0) - (b.level ?? 0) || (a.created_at ?? 0) - (b.created_at ?? 0)
+        (a, b) =>
+          rankOf(a.floor_id) - rankOf(b.floor_id) ||
+          (a.level ?? 0) - (b.level ?? 0) ||
+          (a.created_at ?? 0) - (b.created_at ?? 0)
       );
     } catch (e) {
       Registry._floors = [];

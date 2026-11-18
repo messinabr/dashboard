@@ -517,6 +517,8 @@ class MushroomStrategyEditor extends HTMLElement {
   private _open = new Set<string>();
   /** True while the areas are ordered by hand (some area has an `order`); undefined until first needed. */
   private _manualAreas: boolean | undefined;
+  /** True while the floors are ordered by hand (`home_view.floor_order` is set); undefined until first needed. */
+  private _manualFloors: boolean | undefined;
 
   set hass(hass: any) {
     const first = !this._hass;
@@ -731,7 +733,10 @@ class MushroomStrategyEditor extends HTMLElement {
       if (form) this._forms.push(form);
     }
 
-    if (section.areaOrder) this._areaBlocks(lang).forEach((block) => panel.appendChild(block));
+    if (section.areaOrder) {
+      this._floorBlocks(lang).forEach((block) => panel.appendChild(block));
+      this._areaBlocks(lang).forEach((block) => panel.appendChild(block));
+    }
 
     for (const sub of section.sub ?? []) {
       const child = this._panel(sub, lang);
@@ -854,6 +859,110 @@ class MushroomStrategyEditor extends HTMLElement {
     });
 
     return button;
+  }
+
+  /** The floors of Home Assistant, sorted like the dashboard shows them: manual order first, then level and creation. */
+  private _floorList(): { id: string; name: string }[] {
+    const floors: Obj = this._hass?.floors ?? {};
+    const options = optionsOf(this._config);
+    const manual = getPath(options, ['home_view', 'floor_order']);
+    const manualOrder: string[] = Array.isArray(manual) ? manual : [];
+    const rankOf = (id: string): number => {
+      const index = manualOrder.indexOf(id);
+
+      return index === -1 ? Infinity : index;
+    };
+
+    return Object.keys(floors)
+      .map((id) => ({
+        id,
+        name: String(floors[id]?.name ?? id),
+        level: Number(floors[id]?.level ?? 0),
+        created: Number(floors[id]?.created_at ?? 0),
+      }))
+      .sort((a, b) => rankOf(a.id) - rankOf(b.id) || a.level - b.level || a.created - b.created || a.name.localeCompare(b.name))
+      .map(({ id, name }) => ({ id, name }));
+  }
+
+  /** Whether the floors are ordered by hand. Starts as true when the config already has a `floor_order`. */
+  private _isManualFloors(): boolean {
+    if (this._manualFloors === undefined) {
+      const manual = getPath(optionsOf(this._config), ['home_view', 'floor_order']);
+
+      this._manualFloors = Array.isArray(manual) && manual.length > 0;
+    }
+
+    return this._manualFloors;
+  }
+
+  /** Builds the automatic/manual floor order switch and one row per floor (with up/down buttons when manual). */
+  private _floorBlocks(lang: 'pt' | 'en'): HTMLElement[] {
+    const manual = this._isManualFloors();
+    const blocks: HTMLElement[] = [];
+    const wrap = document.createElement('div');
+    const sw: any = document.createElement('ha-switch');
+    const orderField: Field = {
+      id: 'f_auto',
+      path: [],
+      kind: 'bool',
+      def: true,
+      label: l('Ordem automática dos andares', 'Automatic floor order'),
+      helper: l(
+        'Ligado = os andares seguem o nível cadastrado no Home Assistant. Desligado = aparecem setas ↑ ↓ ao lado de cada andar para você escolher a ordem (vale para os títulos e para as colunas). Só tem efeito com "Separar cômodos por andar".',
+        'On = floors follow the level set in Home Assistant. Off = ↑ ↓ buttons appear next to each floor so you can choose the order (applies to the titles and to the columns). Only matters with "Group areas by floor".'
+      ),
+    };
+
+    wrap.className = 'nv-ctl nv-sw';
+    sw.checked = !manual;
+    sw.addEventListener('change', () => {
+      if (sw.checked) {
+        // Back to automatic: forget the manual order.
+        this._manualFloors = false;
+        this._write(['home_view', 'floor_order'], undefined, undefined);
+      } else {
+        // Start manual from what is shown now, so nothing moves until the user moves it.
+        this._manualFloors = true;
+        this._write(['home_view', 'floor_order'], this._floorList().map((floor) => floor.id), undefined);
+      }
+
+      this._render();
+    });
+    wrap.appendChild(sw);
+    blocks.push(this._row(orderField, lang, wrap));
+
+    if (!manual) return blocks;
+
+    const list = this._floorList();
+
+    list.forEach((floor, index) => {
+      const field: Field = {
+        id: `floor_${floor.id}`,
+        path: [],
+        kind: 'bool',
+        def: true,
+        label: l(`Andar: ${floor.name}`, `Floor: ${floor.name}`),
+      };
+      const group = document.createElement('div');
+      const move = (to: number): void => {
+        const next = this._floorList();
+
+        [next[index], next[to]] = [next[to] as { id: string; name: string }, next[index] as { id: string; name: string }];
+        this._write(['home_view', 'floor_order'], next.map((item) => item.id), undefined);
+        this._render();
+      };
+      const up = this._button('↑', () => move(index - 1));
+      const down = this._button('↓', () => move(index + 1));
+
+      group.className = 'nv-ctl';
+      group.style.gap = '4px';
+      if (index === 0) up.style.visibility = 'hidden';
+      if (index === list.length - 1) down.style.visibility = 'hidden';
+      group.append(up, down);
+      blocks.push(this._row(field, lang, group));
+    });
+
+    return blocks;
   }
 
   /** The areas of Home Assistant, sorted like the dashboard shows them: by `order`, then by name. */
